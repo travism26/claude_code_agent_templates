@@ -1,0 +1,12 @@
+node_modules
+dist
+npm-debug.log
+.env
+.env.local
+data
+tests
+*.test.ts
+coverage
+.git
+.gitignore
+README.md

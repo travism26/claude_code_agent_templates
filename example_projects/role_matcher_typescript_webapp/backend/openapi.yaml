@@ -1,0 +1,624 @@
+openapi: 3.0.3
+info:
+  title: AI Task Prioritizer API
+  description: Backend API for AI-powered task management with intelligent prioritization
+  version: 1.0.0
+  contact:
+    name: API Support
+
+servers:
+  - url: http://localhost:3000
+    description: Local development server
+
+tags:
+  - name: tasks
+    description: Task management operations
+  - name: analytics
+    description: Analytics and reporting
+  - name: audit
+    description: Audit log tracking
+
+paths:
+  /health:
+    get:
+      summary: Health check endpoint
+      responses:
+        '200':
+          description: Service is healthy
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+                  timestamp:
+                    type: string
+
+  /tasks:
+    get:
+      tags:
+        - tasks
+      summary: List all tasks
+      description: Get paginated list of tasks with optional filtering and sorting
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+            maximum: 100
+        - name: sortBy
+          in: query
+          schema:
+            type: string
+            enum: [priority, dueDate, createdAt, updatedAt, title, effort, importance]
+            default: priority
+        - name: sortOrder
+          in: query
+          schema:
+            type: string
+            enum: [asc, desc]
+            default: desc
+        - name: status
+          in: query
+          schema:
+            type: string
+            enum: [pending, in_progress, completed]
+        - name: category
+          in: query
+          schema:
+            type: string
+        - name: minPriority
+          in: query
+          schema:
+            type: number
+        - name: maxPriority
+          in: query
+          schema:
+            type: number
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+    post:
+      tags:
+        - tasks
+      summary: Create a new task
+      description: Create a task with automatic priority calculation
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/CreateTaskRequest'
+      responses:
+        '201':
+          description: Task created successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+  /tasks/{id}:
+    get:
+      tags:
+        - tasks
+      summary: Get task by ID
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+    patch:
+      tags:
+        - tasks
+      summary: Update a task
+      description: Update task fields with automatic priority recalculation
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/UpdateTaskRequest'
+      responses:
+        '200':
+          description: Task updated successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/Task'
+        '404':
+          $ref: '#/components/responses/NotFound'
+        '400':
+          $ref: '#/components/responses/ValidationError'
+
+    delete:
+      tags:
+        - tasks
+      summary: Delete a task
+      parameters:
+        - name: id
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Task deleted successfully
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  message:
+                    type: string
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /tasks/ai-prioritize:
+    post:
+      tags:
+        - tasks
+      summary: AI-powered task prioritization
+      description: Get AI recommendations for task prioritization
+      responses:
+        '200':
+          description: AI prioritization completed
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    $ref: '#/components/schemas/AIPrioritizationResponse'
+
+  /analytics/categories:
+    get:
+      tags:
+        - analytics
+      summary: Get task count by category
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        category:
+                          type: string
+                        count:
+                          type: integer
+
+  /analytics/overdue:
+    get:
+      tags:
+        - analytics
+      summary: Get overdue tasks
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+
+  /analytics/today:
+    get:
+      tags:
+        - analytics
+      summary: Get tasks due today
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      count:
+                        type: integer
+                      tasks:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/Task'
+
+  /analytics/effort-distribution:
+    get:
+      tags:
+        - analytics
+      summary: Get task count by effort level
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      type: object
+                      properties:
+                        effort:
+                          type: integer
+                        count:
+                          type: integer
+
+  /analytics/summary:
+    get:
+      tags:
+        - analytics
+      summary: Get overall statistics summary
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      total:
+                        type: integer
+                      pending:
+                        type: integer
+                      inProgress:
+                        type: integer
+                      completed:
+                        type: integer
+                      overdue:
+                        type: integer
+                      dueToday:
+                        type: integer
+
+  /audit:
+    get:
+      tags:
+        - audit
+      summary: Get audit logs
+      parameters:
+        - name: page
+          in: query
+          schema:
+            type: integer
+            default: 1
+        - name: limit
+          in: query
+          schema:
+            type: integer
+            default: 50
+        - name: taskId
+          in: query
+          schema:
+            type: integer
+        - name: action
+          in: query
+          schema:
+            type: string
+            enum: [create, update, delete]
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: object
+                    properties:
+                      logs:
+                        type: array
+                        items:
+                          $ref: '#/components/schemas/AuditLog'
+                      pagination:
+                        $ref: '#/components/schemas/Pagination'
+
+  /audit/{taskId}:
+    get:
+      tags:
+        - audit
+      summary: Get audit logs for specific task
+      parameters:
+        - name: taskId
+          in: path
+          required: true
+          schema:
+            type: integer
+      responses:
+        '200':
+          description: Successful response
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success:
+                    type: boolean
+                  data:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/AuditLog'
+
+components:
+  schemas:
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        effort:
+          type: integer
+          minimum: 1
+          maximum: 5
+        importance:
+          type: integer
+          minimum: 1
+          maximum: 5
+        category:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+        priority:
+          type: number
+        createdAt:
+          type: string
+          format: date-time
+        updatedAt:
+          type: string
+          format: date-time
+
+    CreateTaskRequest:
+      type: object
+      required:
+        - title
+        - description
+        - effort
+        - importance
+        - category
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        effort:
+          type: integer
+          minimum: 1
+          maximum: 5
+        importance:
+          type: integer
+          minimum: 1
+          maximum: 5
+        category:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+          default: pending
+
+    UpdateTaskRequest:
+      type: object
+      properties:
+        title:
+          type: string
+          maxLength: 200
+        description:
+          type: string
+        dueDate:
+          type: string
+          format: date-time
+          nullable: true
+        effort:
+          type: integer
+          minimum: 1
+          maximum: 5
+        importance:
+          type: integer
+          minimum: 1
+          maximum: 5
+        category:
+          type: string
+        status:
+          type: string
+          enum: [pending, in_progress, completed]
+
+    AuditLog:
+      type: object
+      properties:
+        id:
+          type: integer
+        taskId:
+          type: integer
+          nullable: true
+        action:
+          type: string
+          enum: [create, update, delete]
+        userId:
+          type: string
+          nullable: true
+        changes:
+          type: string
+        timestamp:
+          type: string
+          format: date-time
+
+    AIPrioritizationResponse:
+      type: object
+      properties:
+        rerankedTasks:
+          type: array
+          items:
+            type: object
+            properties:
+              taskId:
+                type: integer
+              newPriority:
+                type: number
+              justification:
+                type: string
+        missingSuggestions:
+          type: array
+          items:
+            type: string
+        identifiedRisks:
+          type: array
+          items:
+            type: string
+
+    Pagination:
+      type: object
+      properties:
+        page:
+          type: integer
+        limit:
+          type: integer
+        total:
+          type: integer
+        pages:
+          type: integer
+
+  responses:
+    NotFound:
+      description: Resource not found
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+
+    ValidationError:
+      description: Validation error
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success:
+                type: boolean
+                example: false
+              error:
+                type: string
+              details:
+                type: array
+                items:
+                  type: object
+                  properties:
+                    path:
+                      type: string
+                    message:
+                      type: string
