@@ -21,28 +21,24 @@ Execute architectural validation and return results as a JSON array of violation
 
 ### Execution Steps
 
-1. **Change to backend directory**
-   ```bash
-   cd backend
-   ```
+1. Run the following commands to execute both validation scripts in the frontend and backend:
 
-2. **Run validation script**
-   ```bash
-   npm run validate:architecture:json
-   ```
-
+```bash
+cd frontend & npm run validate:architecture:json
+cd backend & npm run validate:architecture:json
+```
    This script:
    - Runs ESLint with custom architectural rules
    - Scans TypeScript files for violations
    - Outputs violations in JSON format
 
-3. **Parse the output**
+2. **Parse the output**
    - The script outputs a JSON array to stdout
    - Each violation includes: rule, file, line, column, severity, message, fix_suggestion
    - Exit code 0 = no critical violations
    - Exit code 1 = critical violations found
 
-4. **Return results**
+3. **Return results**
    - IMPORTANT: Return ONLY the JSON array with violations
    - Do not include any additional text, explanations, or markdown formatting
    - We'll immediately run JSON.parse() on the output
