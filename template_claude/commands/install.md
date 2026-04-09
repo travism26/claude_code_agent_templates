@@ -18,8 +18,10 @@ DESIGN.md
 - Remove the existing git remote: `git remote remove origin` (if needed)
 - Initialize a new git repository: `git init` (if needed)
 - Install dependencies: `{{INSTALL_DEPS_COMMAND}}`
-- Verify the build / type-check: `{{BUILD_COMMAND}}`
-- Run tests to verify setup: `{{TEST_COMMAND}}`
+- Verify the project is healthy by delegating to the pipeline phases:
+  - Run `/validate` to confirm the project builds, type-checks, and lints cleanly
+  - Run `/test` to confirm the unit test suite passes
+- **SRP note:** `/install` only handles dependency installation and project priming. Build and test verification are delegated to `/validate` and `/test` so each phase keeps its single responsibility.
 
 ## Report
 

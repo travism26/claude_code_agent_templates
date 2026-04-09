@@ -32,14 +32,15 @@ agent_name: $ARGUMENT if provided, otherwise use 'review_agent'
   - We'll immediately run JSON.parse() on the output, so make sure it's valid JSON
 - Ultra think as you work through the review process. Focus on the critical functionality and code quality.
 
-## Validation Steps
+## Scope (SRP)
 
-To validate the implementation, run:
+This command's only job is to compare the implementation against the spec and surface code-quality / correctness issues. It is one phase in a pipeline:
 
-1. `{{BUILD_COMMAND}}` - Verify compilation / type-check
-2. `{{TEST_COMMAND}}` - Run all tests
-3. `{{STATIC_ANALYSIS_COMMAND}}` - Static analysis
-4. Test relevant application behavior manually if applicable
+```
+… ──► /validate ──► /test ──► /review ──► /document
+```
+
+By the time `/review` runs, `/validate` and `/test` have already executed. Do **not** re-run the build, static analysis, or the test suite here. If you need to know whether tests or validation passed, read the prior phase's output rather than re-running anything.
 
 ## Report
 
@@ -97,8 +98,6 @@ To validate the implementation, run:
             "issue_resolution": "string - description of the resolution",
             "issue_severity": "string - severity of the issue between 'skippable', 'tech_debt', 'blocker'"
         }
-    ],
-    "tests_passed": "boolean - whether {{TEST_COMMAND}} passed",
-    "build_passed": "boolean - whether {{BUILD_COMMAND}} passed"
+    ]
 }
 ```

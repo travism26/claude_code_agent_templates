@@ -14,11 +14,11 @@ issue_description: $1
    - Determine if this is a regression or new issue
 
 2. **Check Application Health**
-   - Verify the application builds / type-checks: `{{BUILD_COMMAND}}`
-   - Verify tests pass: `{{TEST_COMMAND}}`
-   - Check for syntax / static errors: `{{STATIC_ANALYSIS_COMMAND}}`
+   - Run `/validate` to confirm the project builds, type-checks, and lints cleanly
+   - Run `/test` to confirm the unit test suite is green
    - Review recent changes: `git log --oneline -10`
    - Check git status for uncommitted changes: `git status`
+   - **SRP note:** Troubleshoot is an orchestrator. Always delegate build/lint/test to `/validate` and `/test` rather than running their commands directly.
 
 3. **Search Relevant Logs**
    - IMPORTANT: Use the `/search_logs` command to analyze logs systematically
@@ -84,13 +84,10 @@ issue_description: $1
    - Execute `/implement <plan-file>` to implement the fix
 
 9. **Validate the Fix**
-   - Run relevant tests based on affected components:
-     - All tests: `{{TEST_COMMAND}}`
-     - Specific area: `{{TEST_COMMAND_SPECIFIC}}`
-     - With coverage: `{{TEST_COMMAND_COVERAGE}}`
-     - Verify build: `{{BUILD_COMMAND}}`
-   - Confirm the issue no longer reproduces
-   - If tests fail, use `/resolve_failed_test` for each failure
+   - Delegate to the pipeline phases — run `/validate` then `/test`
+   - Confirm the issue no longer reproduces (the original repro steps from step 5)
+   - If `/test` reports failures, use `/resolve_failed_test` for each failure
+   - If `/validate` reports violations, use `/resolve_validation_violation` for each one
 
 ## Codebase Structure
 

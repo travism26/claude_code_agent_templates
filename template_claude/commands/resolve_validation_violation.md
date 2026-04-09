@@ -68,13 +68,14 @@ Make the minimal necessary changes:
 - Don't refactor unrelated code
 - Maintain {{LANGUAGE}} idioms and patterns
 
-### 5. Validate the Fix
+### 5. Verify the Violation Is Resolved
 
 After applying changes:
-1. **CRITICAL**: Always verify using `{{LINT_COMMAND}} <file>` to confirm the specific violation is resolved
+1. **CRITICAL**: Verify using `{{LINT_COMMAND}} <file>` to confirm the specific violation is resolved
 2. Verify the specific violation no longer appears in the output
-3. Check that no new violations were introduced
-4. Run tests: `{{TEST_COMMAND}}`
+3. Check that no new validation violations were introduced
+
+**SRP note:** This command's only job is to fix the one validation violation. Do **not** run the test suite here — that belongs to `/test`. Re-running `/validate` or `/test` is the next phase's responsibility.
 
 **Verification command**:
 ```bash
@@ -109,4 +110,4 @@ After fixing the violation, provide a concise report:
 - Follow {{LANGUAGE}} best practices and idioms
 - **ALWAYS verify using `{{LINT_COMMAND}} <file>`** - never rely on a different formatter/linter for verification, as they may have different rules
 - If the fix introduces new violations, adjust the approach
-- Run `{{TEST_COMMAND}}` to ensure no regressions
+- Do **not** run the test suite here — `/test` is a separate pipeline phase

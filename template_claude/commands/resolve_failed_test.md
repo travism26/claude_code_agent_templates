@@ -28,10 +28,9 @@ Fix a specific failing {{LANGUAGE}} test using the provided failure details.
    - Do not modify unrelated code or tests
    - Follow {{LANGUAGE}} best practices and conventions
 
-5. **Validate the Fix**
+5. **Verify the Fix**
    - Re-run the same `execution_command` to confirm the test now passes
-   - Run `{{BUILD_COMMAND}}` to ensure no compilation/type errors
-   - Do NOT run the full test suite unless necessary
+   - Do NOT run the full test suite, `/validate`, or `{{BUILD_COMMAND}}` here — those are separate pipeline phases
    - Focus only on fixing this specific test
 
 ## Test Failure Input
