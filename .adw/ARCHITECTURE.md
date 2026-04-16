@@ -85,21 +85,34 @@ flowchart LR
     Start([prompt or spec file])
     Plan["1. Plan<br/>travis_plan.py<br/>→ specs/*.md"]
     Build["2. Build<br/>travis_build.py<br/>→ code edits"]
-    Validate["3. Validate<br/>travis_validate.py<br/>(retry up to N)"]
-    Test["4. Test<br/>travis_test.py<br/>(retry up to N)"]
+    Validate["3. Validate ↻<br/>travis_validate.py<br/>retry on violations"]
+    Test["4. Test ↻<br/>travis_test.py<br/>retry on failures"]
     Review["5. Review<br/>travis_review.py<br/>(informational)"]
     Document["6. Document<br/>travis_document.py<br/>(informational)"]
     Done([final summary +<br/>travis_state.json])
 
     Start --> Plan --> Build --> Validate --> Test --> Review --> Document --> Done
 
-    Validate -. --skip-validate .-> Test
-    Review -. --skip-review .-> Document
-    Document -. --skip-document .-> Done
-
-    Validate -- violations --> Validate
-    Test -- failures --> Test
+    classDef required fill:#1e3a5f,stroke:#4a90e2,color:#fff
+    classDef retry fill:#4a3a1e,stroke:#e2a04a,color:#fff
+    classDef info fill:#2a2a2a,stroke:#888,color:#fff
+    class Plan,Build required
+    class Validate,Test retry
+    class Review,Document info
 ```
+
+**Skip / retry behavior (kept out of the diagram to keep it readable):**
+
+| Phase | Skip flag | Retry behavior |
+|---|---|---|
+| Plan | — | none (required) |
+| Build | — | none (required) |
+| Validate | `--skip-validate` | re-runs on violations, up to `--max-validation-retries` (default 3) |
+| Test | — | re-runs on failures, up to `--max-test-retries` (default 3) |
+| Review | `--skip-review` | none (informational) |
+| Document | `--skip-document` | none (informational) |
+
+Validate and Test failures **don't halt the workflow** — they're recorded in `travis_state.json` and the run continues so Review and Document can still produce useful output.
 
 **Phase responsibilities (one line each):**
 
